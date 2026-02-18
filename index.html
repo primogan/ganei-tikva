@@ -691,6 +691,24 @@
       height: auto;
       object-fit: contain;
     }
+
+    .toast {
+      position: fixed;
+      bottom: calc(20px + env(safe-area-inset-bottom));
+      right: 50%;
+      transform: translateX(50%);
+      max-width: 90%;
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      z-index: 10000;
+      transition: opacity 0.3s ease;
+    }
+    .toast.success { background-color: #2e7d32; color: #fff; }
+    .toast.error { background-color: #c62828; color: #fff; }
   </style>
 </head>
 <body>
@@ -923,6 +941,8 @@
             <button type="button" id="btn-download-report-html" class="btn btn-outline">הורד דוח</button>
           </div>
           <button type="button" id="btn-clear-day" class="btn btn-outline btn-danger">נקה את כל הדוחות של היום הנבחר</button>
+          <button type="button" id="btn-sync-current" class="btn btn-outline">סנכרון לענן</button>
+          <button type="button" id="btn-sync-day" class="btn btn-secondary">סנכרון יום</button>
           <div class="small-text">
            
           </div>
@@ -931,9 +951,15 @@
     </div>
   </div>
 
+  <div id="toast" class="toast hidden" aria-live="polite"></div>
+
   <script>
     (function () {
       'use strict';
+
+      // --- Supabase (cloud sync) – replace with your project values ---
+      const SUPABASE_URL = 'https://YOUR_PROJECT_REF.supabase.co';
+      const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
 
       const STORAGE_KEY = 'gardenChecksAppState_v1';
 
@@ -980,6 +1006,212 @@
       const btnClearCurrent = document.getElementById('btn-clear-current');
       const btnClearDay = document.getElementById('btn-clear-day');
       const btnDownloadReportHtml = document.getElementById('btn-download-report-html');
+      const btnSyncCurrent = document.getElementById('btn-sync-current');
+      const btnSyncDay = document.getElementById('btn-sync-day');
+      const toastEl = document.getElementById('toast');
+
+      function showToast(msg, isError) {
+        if (!toastEl) return;
+        toastEl.textContent = msg;
+        toastEl.classList.remove('success', 'error', 'hidden');
+        toastEl.classList.add(isError ? 'error' : 'success');
+        clearTimeout(toastEl._tid);
+        toastEl._tid = setTimeout(function () {
+          toastEl.classList.add('hidden');
+        }, 3500);
+      }
+
+      function weekToNum(weekKey) {
+        return weekKey === 'week1' ? 1 : 2;
+      }
+
+      function compressImageToBlob(dataUrl) {
+        return new Promise(function (resolve, reject) {
+          var img = new Image();
+          img.onload = function () {
+            var canvas = document.createElement('canvas');
+            var maxW = 1280;
+            var w = img.width, h = img.height;
+            if (w > maxW) {
+              h = Math.round(h * maxW / w);
+              w = maxW;
+            }
+            canvas.width = w;
+            canvas.height = h;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            canvas.toBlob(function (blob) {
+              resolve(blob);
+            }, 'image/jpeg', 0.7);
+          };
+          img.onerror = reject;
+          img.src = dataUrl;
+        });
+      }
+
+      function safePathSegment(str) {
+        return String(str).replace(/[^a-zA-Z0-9_\-\u0590-\u05FF]/g, '_').replace(/_+/g, '_') || 'garden';
+      }
+
+      function uploadToStorage(blob, path) {
+        return fetch(SUPABASE_URL + '/storage/v1/object/inspection-images/' + path, {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+            'Content-Type': 'image/jpeg'
+          },
+          body: blob
+        });
+      }
+
+      function insertInspection(row) {
+        return fetch(SUPABASE_URL + '/rest/v1/inspections', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+            'apikey': SUPABASE_ANON_KEY,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify(row)
+        });
+      }
+
+      function syncReport(report, weekKey, dayKey, gardenName, dateVal, notes, tasksForExecution, taskDetails, imagesArr) {
+        var weekNum = weekToNum(weekKey);
+        var dateStr = (dateVal || '').slice(0, 10);
+        var ts = Date.now();
+        var basePath = dateStr + '/' + weekNum + '/' + safePathSegment(dayKey) + '/' + safePathSegment(gardenName);
+
+        return Promise.all(imagesArr.slice(0, 3).map(function (dataUrl, i) {
+          if (!dataUrl) return Promise.resolve(null);
+          return compressImageToBlob(dataUrl).then(function (blob) {
+            var fileName = ts + '_' + (i + 1) + '.jpg';
+            return uploadToStorage(blob, basePath + '/' + fileName).then(function (res) {
+              if (!res.ok) throw new Error('Upload failed');
+              return SUPABASE_URL + '/storage/v1/object/public/inspection-images/' + basePath + '/' + fileName;
+            });
+          });
+        })).then(function (urls) {
+          var imageUrls = urls.filter(Boolean);
+          var row = {
+            week: weekNum,
+            day: dayKey,
+            garden_name: gardenName,
+            inspected_at: dateStr,
+            notes: (notes || '').slice(0, 5000) || null,
+            tasks_for_execution: !!tasksForExecution,
+            task_details: (taskDetails || '').trim() || null,
+            images: imageUrls
+          };
+          return insertInspection(row).then(function (res) {
+            if (!res.ok) throw new Error('Insert failed');
+            return res.json();
+          });
+        }).then(function (rows) {
+          var id = rows && rows[0] && rows[0].id;
+          if (id) {
+            report.syncedAt = new Date().toISOString();
+            report.remoteId = id;
+          }
+          return id;
+        });
+      }
+
+      function syncCurrentReport() {
+        var weekKey = appState.selectedWeek;
+        var dayKey = appState.selectedDay;
+        var gardenName = appState.selectedGarden;
+        if (!weekKey || !dayKey || !gardenName) {
+          showToast('בחרו גן לפני סנכרון', true);
+          return;
+        }
+        var report = getReport(weekKey, dayKey, gardenName);
+        if (!report) {
+          showToast('אין דוח לסנכרן', true);
+          return;
+        }
+        if (report.syncedAt) {
+          showToast('הדוח כבר מסונכרן לענן', false);
+          return;
+        }
+        if (!report.visited) {
+          showToast('סמנו את הדוח כבוצע לפני סנכרון', true);
+          return;
+        }
+        var dateVal = dateInput.value || report.date;
+        if (!dateVal) {
+          showToast('הוסיפו תאריך בדיקה', true);
+          return;
+        }
+        btnSyncCurrent.disabled = true;
+        var notes = notesInput.value.trim() || report.notes || '';
+        var tasksForExecution = getToggleValue();
+        var taskDetails = taskDetailsInput.value.trim() || report.taskDetails || '';
+        var imagesArr = Array.isArray(report.images) ? report.images : [null, null, null];
+
+        syncReport(report, weekKey, dayKey, gardenName, dateVal, notes, tasksForExecution, taskDetails, imagesArr)
+          .then(function () {
+            scheduleSave();
+            showToast('הדוח סונכרן בהצלחה');
+            showReportStep();
+          })
+          .catch(function (err) {
+            if (err.message === 'Failed to fetch' || err.message === 'NetworkError') {
+              showToast('אין חיבור, יסתנכרן כשתנסה שוב', true);
+            } else {
+              showToast('שגיאה בסנכרון: ' + (err.message || 'נסו שוב'), true);
+            }
+          })
+          .finally(function () {
+            btnSyncCurrent.disabled = false;
+          });
+      }
+
+      function syncDay() {
+        var weekKey = appState.selectedWeek;
+        var dayKey = appState.selectedDay;
+        if (!weekKey || !dayKey) {
+          showToast('בחרו שבוע ויום', true);
+          return;
+        }
+        var gardens = gardensData[weekKey] && gardensData[weekKey][dayKey] ? gardensData[weekKey][dayKey] : [];
+        var toSync = [];
+        for (var g = 0; g < gardens.length; g++) {
+          var r = getReport(weekKey, dayKey, gardens[g]);
+          if (r && r.visited && !r.syncedAt) toSync.push({ name: gardens[g], report: r });
+        }
+        if (toSync.length === 0) {
+          showToast('אין דוחות להעלאה ליום זה', false);
+          return;
+        }
+        btnSyncDay.disabled = true;
+        var done = 0;
+        var fail = false;
+        function next() {
+          if (done >= toSync.length) {
+            btnSyncDay.disabled = false;
+            if (fail) showToast('חלק מהדוחות לא סונכרנו – נסו שוב', true);
+            else showToast('סונכרנו ' + toSync.length + ' דוחות', false);
+            scheduleSave();
+            showReportStep();
+            renderGardenList();
+            return;
+          }
+          var item = toSync[done];
+          var report = item.report;
+          var dateVal = report.date;
+          if (!dateVal) { done++; next(); return; }
+          syncReport(report, weekKey, dayKey, item.name, dateVal, report.notes, report.tasksForExecution, report.taskDetails, report.images || [null, null, null])
+            .then(function () { done++; next(); })
+            .catch(function () {
+              fail = true;
+              done++;
+              next();
+            });
+        }
+        next();
+      }
 
       function loadGardensData() {
         const scriptEl = document.getElementById('gardens-data');
@@ -1046,7 +1278,9 @@
             tasksForExecution: false,
             taskDetails: '',
             images: [null, null, null],
-            updatedAt: null
+            updatedAt: null,
+            syncedAt: null,
+            remoteId: null
           };
         }
         return appState.reports[weekKey][dayKey][gardenName];
@@ -1491,6 +1725,8 @@
         btnDownloadReportHtml.addEventListener('click', function () {
           downloadReportAsHtml();
         });
+        if (btnSyncCurrent) btnSyncCurrent.addEventListener('click', syncCurrentReport);
+        if (btnSyncDay) btnSyncDay.addEventListener('click', syncDay);
       }
 
       function showImageError(msg) {
