@@ -639,12 +639,39 @@
         padding-bottom: 20px;
       }
     }
+
+    /* מסך פתיחה – לוגו */
+    .splash-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #E6E6E6;
+      transition: opacity 0.6s ease-out;
+    }
+    .splash-screen.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .splash-screen .splash-logo {
+      max-width: 80vw;
+      max-height: 55vh;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
   </style>
 </head>
 <body>
+  <div id="splash-screen" class="splash-screen">
+    <img src="logo-ganei-tikva.png" alt="גני תקווה" class="splash-logo">
+  </div>
+
   <div class="page">
     <div class="card">
-      <h1 class="app-title">דיווח גנים-גני תקווה</h1>
+      <h1 class="app-title">אפליקציית בדיקות גנים</h1>
       <script id="gardens-data" type="application/json">
             {
                 "week1": {
@@ -1536,6 +1563,15 @@
       }
 
       document.addEventListener('DOMContentLoaded', function () {
+        var splash = document.getElementById('splash-screen');
+        if (splash) {
+          window.setTimeout(function () {
+            splash.classList.add('fade-out');
+            window.setTimeout(function () {
+              splash.remove();
+            }, 600);
+          }, 1000);
+        }
         initListeners();
         restoreInitialUI();
       });
@@ -1543,4 +1579,3 @@
   </script>
 </body>
 </html>
-
