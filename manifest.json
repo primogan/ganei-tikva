@@ -1,0 +1,26 @@
+{
+  "name": "דיווח גנים - גני תקווה",
+  "short_name": "גני תקווה",
+  "description": "אפליקציית בדיקות גנים לשטח",
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#E6E6E6",
+  "theme_color": "#E6E6E6",
+  "dir": "rtl",
+  "lang": "he",
+  "icons": [
+    {
+      "src": "logo-ganei-tikva.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo-ganei-tikva.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
