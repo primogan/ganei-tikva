@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>דיווח גנים - אפליקציית שטח</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#E6E6E6">
+  <meta name="theme-color" content="#0F2B46">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,20 +16,24 @@
   <style>
     :root {
       color-scheme: light;
-      --primary: #1976d2;
-      --primary-dark: #0d47a1;
+      --municipal: #0F2B46;
+      --primary: #0F2B46;
+      --primary-dark: #0a1d2e;
       --accent: #ff9800;
-      --bg: #fafafa;
+      --bg: #f0f2f5;
       --card-bg: #ffffff;
-      --border: #dddddd;
+      --border: #e0e0e0;
       --text: #111111;
       --text-muted: #666666;
       --danger: #c62828;
       --success: #2e7d32;
-      --shadow-soft: 0 2px 6px rgba(0, 0, 0, 0.08);
+      --status-gray: #9e9e9e;
+      --status-orange: #e65100;
+      --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.06);
+      --shadow-card: 0 2px 10px rgba(0, 0, 0, 0.08);
       --radius-lg: 14px;
-      --radius-md: 10px;
-      --radius-sm: 6px;
+      --radius-md: 12px;
+      --radius-sm: 8px;
       --tap-height: 48px;
     }
 
@@ -64,12 +68,42 @@
       max-width: 480px;
       min-height: 100vh;
       min-height: -webkit-fill-available;
-      padding: 12px 10px 16px;
-      padding-top: calc(12px + env(safe-area-inset-top));
+      padding: 0;
       padding-bottom: calc(16px + env(safe-area-inset-bottom));
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 0;
+    }
+
+    .app-header {
+      background: var(--municipal);
+      color: #fff;
+      padding: 16px 16px 18px;
+      padding-top: calc(16px + env(safe-area-inset-top));
+      margin: 0;
+      border-radius: 0;
+    }
+    .app-header h1 {
+      margin: 0 0 4px;
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+    .app-header .app-subtitle {
+      font-size: 0.85rem;
+      opacity: 0.9;
+      margin-bottom: 8px;
+    }
+    .app-header .app-date {
+      font-size: 0.9rem;
+      opacity: 0.95;
+    }
+
+    .app-content {
+      padding: 14px 12px 16px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
     }
 
     .app-title {
@@ -263,6 +297,59 @@
       padding: 0;
     }
 
+    .week-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .week-card {
+      background: #fff;
+      border-radius: var(--radius-md);
+      padding: 18px 14px;
+      text-align: center;
+      cursor: pointer;
+      box-shadow: var(--shadow-card);
+      border: 2px solid transparent;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .week-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.1); }
+    .week-card.active {
+      background: var(--municipal);
+      color: #fff;
+      border-color: var(--municipal);
+    }
+    .week-card .week-card-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 4px; }
+    .week-card .week-card-sub { font-size: 0.8rem; opacity: 0.85; }
+    .week-card:not(.active) .week-card-title { color: var(--success); }
+    .week-card:not(.active) .week-card-sub { color: var(--text-muted); }
+
+    .day-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    .day-chip {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: none;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      background: #e0e0e0;
+      color: #757575;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, color 0.2s;
+    }
+    .day-chip.active {
+      background: var(--municipal);
+      color: #fff;
+    }
+    .day-chip:active { transform: scale(0.95); }
+
     .pill {
       flex: 1 1 calc(50% - 4px);
       min-width: 80px;
@@ -281,17 +368,13 @@
       justify-content: center;
       box-shadow: none;
     }
-
     .pill.active {
       background-color: var(--primary);
       color: #ffffff;
       border-color: var(--primary-dark);
       box-shadow: var(--shadow-soft);
     }
-
-    .pill:active {
-      transform: scale(0.98);
-    }
+    .pill:active { transform: scale(0.98); }
 
     .label {
       font-size: 0.8rem;
@@ -379,25 +462,48 @@
       color: var(--text-muted);
     }
 
+    .progress-card {
+      background: #fff;
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      box-shadow: var(--shadow-card);
+    }
+    .progress-card .progress-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .progress-card .progress-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--municipal);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      font-weight: bold;
+    }
     .progress-container {
       width: 100%;
-      background-color: #eeeeee;
+      background-color: #e8e8e8;
       border-radius: 999px;
       height: 10px;
       overflow: hidden;
     }
-
     .progress-bar {
       height: 100%;
-      background: linear-gradient(90deg, var(--primary), var(--accent));
+      background: var(--municipal);
       width: 0%;
       transition: width 0.3s ease;
     }
-
     .progress-text {
-      font-size: 0.8rem;
-      margin-top: 4px;
-      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 0;
+      color: var(--text);
+      font-weight: 500;
     }
 
     .badges {
@@ -442,22 +548,60 @@
     .garden-item {
       width: 100%;
       text-align: right;
-      padding: 8px 10px;
+      padding: 14px 16px;
       border-radius: var(--radius-md);
-      border: 1px solid var(--border);
-      background-color: #ffffff;
-      margin-bottom: 4px;
-      min-height: var(--tap-height);
+      border: none;
+      background-color: #fff;
+      margin-bottom: 10px;
+      min-height: 56px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 6px;
-      font-size: 0.9rem;
+      gap: 12px;
+      font-size: 1rem;
       cursor: pointer;
+      box-shadow: var(--shadow-card);
+      transition: box-shadow 0.2s;
+    }
+    .garden-item:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.1); }
+
+    .garden-item-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .garden-item-name {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+    .garden-item-status {
+      font-size: 0.8rem;
+      color: var(--text-muted);
     }
 
-    .garden-item span {
-      flex: 1;
+    .status-indicator {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-weight: bold;
+      font-size: 1rem;
+    }
+    .status-indicator.status-done {
+      background: var(--success);
+      color: #fff;
+    }
+    .status-indicator.status-pending {
+      background: var(--status-gray);
+      color: #fff;
+    }
+    .status-indicator.status-tasks {
+      background: var(--status-orange);
+      color: #fff;
     }
 
     .garden-item .status-dot {
@@ -466,7 +610,6 @@
       border-radius: 50%;
       background-color: #bdbdbd;
     }
-
     .garden-item.visited .status-dot {
       background-color: var(--success);
     }
@@ -746,10 +889,14 @@
     <img src="logo-ganei-tikva.png" alt="גני תקווה" class="splash-logo">
   </div>
 
-  <div class="page">
-    <div class="card">
-      <h1 class="app-title">דיווח יומי- גני תקווה</h1>
-      <script id="gardens-data" type="application/json">
+    <div class="page">
+    <header class="app-header">
+      <h1>מערכת ניהול בדיקות גנים</h1>
+      <div class="app-subtitle">דיווח יומי – גני תקווה</div>
+      <div class="app-date" id="app-header-date"></div>
+    </header>
+
+    <script id="gardens-data" type="application/json">
             {
                 "week1": {
                   "א": [
@@ -821,43 +968,46 @@
               }
               
         </script>
-    </div>
 
-    <div id="app" class="card">
-      <div class="status-bar">
-        <div id="status-chip-week" class="chip chip-muted">שבוע: לא נבחר</div>
-        <div id="status-chip-day" class="chip chip-muted">יום: לא נבחר</div>
-        <div id="status-chip-garden" class="chip chip-muted">גן: לא נבחר</div>
+    <div id="app" class="app-content">
+      <div class="status-bar" style="margin-bottom: 4px;">
+        <span id="status-chip-garden" class="chip chip-muted">לא נבחר גן</span>
       </div>
 
-      <div class="field">
-        <div class="label">התקדמות יום נוכחי</div>
+      <div class="progress-card">
+        <div class="progress-header">
+          <div class="progress-icon" id="progress-icon">✓</div>
+          <div id="progress-text" class="progress-text">0 מתוך 0 בדיקות הושלמו</div>
+        </div>
         <div class="progress-container">
           <div id="progress-bar" class="progress-bar"></div>
         </div>
-        <div id="progress-text" class="progress-text">בוצעו 0 מתוך 0 גנים</div>
       </div>
 
       <!-- בחירת שבוע -->
       <section id="step-week">
-        <div class="section-title">בחירת שבוע</div>
-        <div class="pill-row">
-          <button type="button" class="pill" data-week="week1">שבוע 1</button>
-          <button type="button" class="pill" data-week="week2">שבוע 2</button>
+        <div class="week-cards">
+          <button type="button" class="week-card" data-week="week1">
+            <div class="week-card-title">שבוע 1</div>
+            <div class="week-card-sub">סבב תחזוקה</div>
+          </button>
+          <button type="button" class="week-card" data-week="week2">
+            <div class="week-card-title">שבוע 2</div>
+            <div class="week-card-sub">סבב תחזוקה</div>
+          </button>
         </div>
       </section>
 
       <!-- בחירת יום -->
       <section id="step-day" class="hidden">
-        <div class="section-title">בחירת יום</div>
-        <div class="pill-row">
-          <button type="button" class="pill" data-day="א">א</button>
-          <button type="button" class="pill" data-day="ב">ב</button>
-          <button type="button" class="pill" data-day="ג">ג</button>
-          <button type="button" class="pill" data-day="ד">ד</button>
-          <button type="button" class="pill" data-day="ה">ה</button>
-          <button type="button" class="pill" data-day="ו">ו</button>
-          <button type="button" class="pill" data-day="שישי">צ'ק ליסט שישי</button>
+        <div class="day-chips">
+          <button type="button" class="day-chip" data-day="א">א</button>
+          <button type="button" class="day-chip" data-day="ב">ב</button>
+          <button type="button" class="day-chip" data-day="ג">ג</button>
+          <button type="button" class="day-chip" data-day="ד">ד</button>
+          <button type="button" class="day-chip" data-day="ה">ה</button>
+          <button type="button" class="day-chip" data-day="ו">ו</button>
+          <button type="button" class="day-chip" data-day="שישי">ש</button>
         </div>
       </section>
 
@@ -1009,9 +1159,8 @@
       let saveTimeout = null;
       let imageReplaceIndex = null;
 
-      const statusChipWeek = document.getElementById('status-chip-week');
-      const statusChipDay = document.getElementById('status-chip-day');
       const statusChipGarden = document.getElementById('status-chip-garden');
+      const appHeaderDate = document.getElementById('app-header-date');
       const progressBarEl = document.getElementById('progress-bar');
       const progressTextEl = document.getElementById('progress-text');
 
@@ -1344,17 +1493,19 @@
       }
 
       function updateStatusChips() {
-        const weekLabel = hebrewWeekLabel(appState.selectedWeek);
-        statusChipWeek.textContent = 'שבוע: ' + weekLabel;
-        statusChipWeek.classList.toggle('chip-muted', !appState.selectedWeek);
-
-        const dayLabel = appState.selectedDay || 'לא נבחר';
-        statusChipDay.textContent = 'יום: ' + dayLabel;
-        statusChipDay.classList.toggle('chip-muted', !appState.selectedDay);
-
-        const gardenLabel = appState.selectedGarden || 'לא נבחר';
-        statusChipGarden.textContent = 'גן: ' + gardenLabel;
+        const gardenLabel = appState.selectedGarden ? appState.selectedGarden : 'לא נבחר גן';
+        statusChipGarden.textContent = gardenLabel;
         statusChipGarden.classList.toggle('chip-muted', !appState.selectedGarden);
+      }
+
+      function updateHeaderDate() {
+        if (!appHeaderDate) return;
+        appHeaderDate.textContent = new Date().toLocaleDateString('he-IL', {
+          weekday: 'long',
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        });
       }
 
       function updateProgress() {
@@ -1362,7 +1513,7 @@
         const dayKey = appState.selectedDay;
         if (!weekKey || !dayKey) {
           progressBarEl.style.width = '0%';
-          progressTextEl.textContent = 'בוצעו 0 מתוך 0 גנים';
+          progressTextEl.textContent = '0 מתוך 0 בדיקות הושלמו';
           return;
         }
 
@@ -1377,11 +1528,11 @@
         }
         const percent = total > 0 ? Math.round((done / total) * 100) : 0;
         progressBarEl.style.width = percent + '%';
-        progressTextEl.textContent = 'בוצעו ' + done + ' מתוך ' + total + ' גנים';
+        progressTextEl.textContent = done + ' מתוך ' + total + ' בדיקות הושלמו';
       }
 
       function renderWeekSelection() {
-        const buttons = stepWeek.querySelectorAll('.pill');
+        const buttons = stepWeek.querySelectorAll('.week-card');
         buttons.forEach(btn => {
           const weekKey = btn.getAttribute('data-week');
           btn.classList.toggle('active', appState.selectedWeek === weekKey);
@@ -1389,7 +1540,7 @@
       }
 
       function renderDaySelection() {
-        const buttons = stepDay.querySelectorAll('.pill');
+        const buttons = stepDay.querySelectorAll('.day-chip');
         buttons.forEach(btn => {
           const dayKey = btn.getAttribute('data-day');
           btn.classList.toggle('active', appState.selectedDay === dayKey);
@@ -1427,34 +1578,54 @@
           item.type = 'button';
           item.className = 'garden-item';
           if (appState.selectedGarden === name) {
-            item.style.borderColor = 'var(--primary)';
+            item.style.border = '2px solid var(--municipal)';
           }
           const report = getReport(weekKey, dayKey, name);
-          if (report && report.visited) {
-            item.classList.add('visited');
-          }
+          const visited = report && report.visited;
+          const hasTasks = report && report.tasksForExecution;
 
-          const wrap = document.createElement('span');
-          wrap.style.flex = '1';
-          wrap.style.display = 'flex';
-          wrap.style.alignItems = 'center';
-          wrap.style.gap = '6px';
-          wrap.style.justifyContent = 'flex-end';
-          const span = document.createElement('span');
-          span.textContent = name;
-          wrap.appendChild(span);
+          const info = document.createElement('div');
+          info.className = 'garden-item-info';
+          const nameEl = document.createElement('div');
+          nameEl.className = 'garden-item-name';
+          nameEl.style.display = 'flex';
+          nameEl.style.alignItems = 'center';
+          nameEl.style.gap = '6px';
+          nameEl.style.flexWrap = 'wrap';
+          nameEl.appendChild(document.createTextNode(name));
           if (report && report.syncedAt) {
             const syncedBadge = document.createElement('span');
             syncedBadge.className = 'badge-synced';
             syncedBadge.textContent = 'סונכרן';
-            wrap.appendChild(syncedBadge);
+            nameEl.appendChild(syncedBadge);
+          }
+          info.appendChild(nameEl);
+          const statusText = document.createElement('div');
+          statusText.className = 'garden-item-status';
+          if (visited && hasTasks) {
+            statusText.textContent = 'סטטוס תחזוקה: יש משימות';
+          } else if (visited) {
+            statusText.textContent = 'סטטוס תחזוקה: בוצע';
+          } else {
+            statusText.textContent = 'סטטוס תחזוקה: לא בוצע';
+          }
+          info.appendChild(statusText);
+
+          const indicator = document.createElement('div');
+          indicator.className = 'status-indicator';
+          if (visited && hasTasks) {
+            indicator.classList.add('status-tasks');
+            indicator.textContent = '!';
+          } else if (visited) {
+            indicator.classList.add('status-done');
+            indicator.textContent = '✓';
+          } else {
+            indicator.classList.add('status-pending');
+            indicator.textContent = '•';
           }
 
-          const statusDot = document.createElement('div');
-          statusDot.className = 'status-dot';
-
-          item.appendChild(wrap);
-          item.appendChild(statusDot);
+          item.appendChild(info);
+          item.appendChild(indicator);
           item.addEventListener('click', function () {
             appState.selectedGarden = name;
             scheduleSave();
@@ -1530,7 +1701,7 @@
 
       function initListeners() {
         stepWeek.addEventListener('click', function (e) {
-          const btn = e.target.closest('.pill[data-week]');
+          const btn = e.target.closest('.week-card[data-week]');
           if (!btn) return;
           const weekKey = btn.getAttribute('data-week');
           appState.selectedWeek = weekKey;
@@ -1548,7 +1719,7 @@
         });
 
         stepDay.addEventListener('click', function (e) {
-          const btn = e.target.closest('.pill[data-day]');
+          const btn = e.target.closest('.day-chip[data-day]');
           if (!btn) return;
           const dayKey = btn.getAttribute('data-day');
           appState.selectedDay = dayKey;
@@ -1867,6 +2038,7 @@
       }
 
       document.addEventListener('DOMContentLoaded', function () {
+        updateHeaderDate();
         var splash = document.getElementById('splash-screen');
         if (splash) {
           window.setTimeout(function () {
