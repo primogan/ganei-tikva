@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>דיווח גנים - אפליקציית שטח</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <style>
+    :root {
+      color-scheme: light;
+      --primary: #1976d2;
+      --primary-dark: #0d47a1;
+      --accent: #ff9800;
+      --bg: #fafafa;
+      --card-bg: #ffffff;
+      --border: #dddddd;
+      --text: #111111;
+      --text-muted: #666666;
+      --danger: #c62828;
+      --success: #2e7d32;
+      --shadow-soft: 0 2px 6px rgba(0, 0, 0, 0.08);
+      --radius-lg: 14px;
+      --radius-md: 10px;
+      --radius-sm: 6px;
+      --tap-height: 48px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      direction: rtl;
+      text-align: right;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 480px;
+      min-height: 100vh;
+      padding: 12px 10px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .app-title {
+      margin: 0 0 4px;
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      margin: 0 0 8px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border-radius: var(--radius-lg);
+      padding: 10px 12px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid rgba(0,0,0,0.02);
+    }
+
+    .card + .card {
+      margin-top: 4px;
+    }
+
+    details.instructions {
+      margin-top: 4px;
+    }
+
+    details.instructions summary {
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      outline: none;
+    }
+
+    details.instructions p,
+    details.instructions ul {
+      margin-top: 6px;
+      margin-bottom: 0;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .json-placeholder h2 {
+      margin: 4px 0;
+      font-size: 0.9rem;
+    }
+
+    .json-placeholder p {
+      margin: 0 0 4px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .json-placeholder {
+      background: #fff8e1;
+      border-radius: var(--radius-md);
+      padding: 8px 10px;
+      border: 1px solid #ffe082;
+      margin-top: 4px;
+    }
+
+    #app {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .section-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .pill-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .btn,
+    button {
+      font-family: inherit;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: var(--tap-height);
+      padding: 0 12px;
+      border-radius: var(--radius-md);
+      border: none;
+      outline: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      background-color: var(--primary);
+      color: #ffffff;
+      box-shadow: var(--shadow-soft);
+      transition: background-color 0.15s ease, transform 0.05s ease, box-shadow 0.1s ease;
+      width: 100%;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+      background-color: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      background-color: #f1f3f4;
+      color: var(--text);
+      box-shadow: none;
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:active {
+      background-color: #e0e0e0;
+    }
+
+    .btn-outline {
+      background-color: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      box-shadow: none;
+    }
+
+    .btn-small {
+      min-height: 36px;
+      font-size: 0.85rem;
+      padding: 0 8px;
+      border-radius: var(--radius-sm);
+    }
+
+    .btn-danger {
+      background-color: var(--danger);
+      color: #ffffff;
+    }
+
+    .btn-success {
+      background-color: var(--success);
+      color: #ffffff;
+    }
+
+    .btn-icon {
+      width: var(--tap-height);
+      padding: 0;
+    }
+
+    .pill {
+      flex: 1 1 calc(50% - 4px);
+      min-width: 80px;
+      text-align: center;
+      background-color: #f1f3f4;
+      color: var(--text);
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: var(--tap-height);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: none;
+    }
+
+    .pill.active {
+      background-color: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary-dark);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .pill:active {
+      transform: scale(0.98);
+    }
+
+    .label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+
+    .value-inline {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    input[type="date"],
+    input[type="text"],
+    input[type="search"],
+    textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      font-size: 0.9rem;
+      font-family: inherit;
+      outline: none;
+      min-height: var(--tap-height);
+      background-color: #ffffff;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+      padding-top: 8px;
+      padding-bottom: 8px;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 1px rgba(25, 118, 210, 0.2);
+    }
+
+    .field {
+      margin-bottom: 8px;
+    }
+
+    .row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .row.space-between {
+      justify-content: space-between;
+    }
+
+    .row-wrap {
+      flex-wrap: wrap;
+    }
+
+    .small-text {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .status-bar {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .chip {
+      padding: 4px 8px;
+      border-radius: 999px;
+      background-color: #e3f2fd;
+      color: var(--primary-dark);
+      font-size: 0.78rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .chip-muted {
+      background-color: #eeeeee;
+      color: var(--text-muted);
+    }
+
+    .progress-container {
+      width: 100%;
+      background-color: #eeeeee;
+      border-radius: 999px;
+      height: 10px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      font-size: 0.8rem;
+      margin-top: 4px;
+      color: var(--text-muted);
+    }
+
+    .badges {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background-color: #f1f3f4;
+      color: var(--text-muted);
+    }
+
+    .search-input {
+      position: relative;
+    }
+
+    .search-input input {
+      padding-right: 32px;
+    }
+
+    .search-input::before {
+      content: "🔍";
+      position: absolute;
+      top: 50%;
+      right: 8px;
+      transform: translateY(-50%);
+      font-size: 0.9rem;
+      pointer-events: none;
+    }
+
+    .garden-list {
+      max-height: 260px;
+      overflow-y: auto;
+      margin-top: 6px;
+    }
+
+    .garden-item {
+      width: 100%;
+      text-align: right;
+      padding: 8px 10px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background-color: #ffffff;
+      margin-bottom: 4px;
+      min-height: var(--tap-height);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .garden-item span {
+      flex: 1;
+    }
+
+    .garden-item .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: #bdbdbd;
+    }
+
+    .garden-item.visited .status-dot {
+      background-color: var(--success);
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 52px;
+      height: 28px;
+      border-radius: 999px;
+      background-color: #e0e0e0;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .toggle-knob {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background-color: #ffffff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      transition: transform 0.2s ease, right 0.2s ease, left 0.2s ease;
+    }
+
+    .toggle-on {
+      background-color: var(--success);
+    }
+
+    .toggle-on .toggle-knob {
+      right: auto;
+      left: 2px;
+    }
+
+    .image-grid {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .image-slot {
+      flex: 1;
+      min-width: 0;
+      border-radius: var(--radius-md);
+      border: 1px dashed #bdbdbd;
+      background-color: #fafafa;
+      padding: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: stretch;
+      justify-content: flex-start;
+    }
+
+    .image-preview-wrapper {
+      position: relative;
+      width: 100%;
+      padding-top: 70%;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background-color: #eeeeee;
+    }
+
+    .image-preview-wrapper img {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .image-empty {
+      font-size: 0.75rem;
+      color: #9e9e9e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      inset: 0;
+    }
+
+    .image-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .mt-4 { margin-top: 4px; }
+    .mt-6 { margin-top: 6px; }
+    .mt-8 { margin-top: 8px; }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .footer-actions {
+      margin-top: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .inline-buttons {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .inline-buttons .btn {
+      flex: 1;
+    }
+
+    .error-text {
+      font-size: 0.8rem;
+      color: var(--danger);
+      margin-top: 2px;
+    }
+
+    .soft-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .breadcrumbs {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .breadcrumbs strong {
+      color: var(--text);
+    }
+
+    .tag-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background-color: #f1f3f4;
+      font-size: 0.75rem;
+    }
+
+    .tag-pill span {
+      margin-left: 4px;
+    }
+
+    .hr-soft {
+      border: none;
+      border-top: 1px solid #eeeeee;
+      margin: 6px 0;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0,0,0,0.45);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 40;
+      padding: 10px;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 480px;
+      background-color: var(--card-bg);
+      border-radius: 16px 16px 14px 14px;
+      padding: 10px 12px 12px;
+      box-shadow: 0 -4px 16px rgba(0,0,0,0.25);
+    }
+
+    .modal-title {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .modal-body {
+      margin-top: 6px;
+      font-size: 0.85rem;
+      color: var(--text);
+    }
+
+    .modal-body p {
+      margin: 2px 0;
+    }
+
+    .modal-footer {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .badge-warning {
+      background-color: #fff3cd;
+      color: #856404;
+      border-radius: var(--radius-sm);
+      padding: 4px 6px;
+      font-size: 0.78rem;
+      margin-top: 4px;
+    }
+
+    @media (min-width: 600px) {
+      .page {
+        padding-top: 16px;
+        padding-bottom: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="card">
+      <h1 class="app-title">אפליקציית בדיקות גנים</h1>
+      <script id="gardens-data" type="application/json">
+            {
+                "week1": {
+                  "א": [
+                    "אקליפטוס",
+                    "דרך הבשמים",
+                    "טרומן",
+                    "סמטת יובלים",
+                    "פארק אפריקה",
+                    "פינת הבשמים"
+                  ],
+                  "ב": [
+                    "דרך העמק",
+                    "דרך התמרים",
+                    "דרך התקווה - בין אקליפטוס לדרך המלך",
+                    "פארק התמרים"
+                  ],
+                  "ג": [
+                    "טיילת התקוות - בין בקעת הירדן למשי",
+                    "עין שמש",
+                    "בקעת הירדן",
+                    "רחבת בוני העיר + חניון + גג פלאים",
+                    "מעבר אילות 4-6 דרך המלך 5-7 (בריכה)",
+                    "דרך האגמים",
+                    "דרך המלך - בין העמקים לדרך הים",
+                    "דרך הים - מדרך המלך לדרך אילות"
+                  ],
+                  "ד": [
+                    "גנים צפון",
+                    "גנים קטן התקווה אילות",
+                    "דרך אילות",
+                    "דרך התקווה - בין דרך המלך לדרך אילות"
+                  ],
+                  "ה": [],
+                  "ו": [],
+                  "שישי": []
+                },
+                "week2": {
+                  "א": [
+                    "דרך הדרים",
+                    "דרך הים - בין רחוב הדרים לרחוב הברוש",
+                    "האורנים",
+                    "טיילת התקוות - בין אורנים להדרים",
+                    "פארק גני סביון",
+                    "הברוש"
+                  ],
+                  "ב": [
+                    "דרך הים - בין רחוב הדרים לדרך המלך",
+                    "טיילת התקוות - בין הדרים לדרך המלך",
+                    "שדרת נובה"
+                  ],
+                  "ג": [
+                    "גינון שביל תרבבותא חניון אמירים",
+                    "דרך המשי",
+                    "מועדון לקשיש + תרבבותא",
+                    "מעבר המשי 3 גבול ק. אונו",
+                    "מעבר המשי 6-10 אילות 3 כולל שביל לאגמים",
+                    "מעבר כיכר המשי + הים + תעלה גבול ק. אונו"
+                  ],
+                  "ד": [
+                    "דרך הים - מדרך אילות לדרך המשי",
+                    "פארק המשי",
+                    "פינת אילות-הים",
+                    "דרך התקווה - בין דרך אילות לכניסה מקרית אונו"
+                  ],
+                  "ה": [],
+                  "ו": [],
+                  "שישי": []
+                }
+              }
+              
+        </script>
+    </div>
+
+    <div id="app" class="card">
+      <div class="status-bar">
+        <div id="status-chip-week" class="chip chip-muted">שבוע: לא נבחר</div>
+        <div id="status-chip-day" class="chip chip-muted">יום: לא נבחר</div>
+        <div id="status-chip-garden" class="chip chip-muted">גן: לא נבחר</div>
+      </div>
+
+      <div class="field">
+        <div class="label">התקדמות יום נוכחי</div>
+        <div class="progress-container">
+          <div id="progress-bar" class="progress-bar"></div>
+        </div>
+        <div id="progress-text" class="progress-text">בוצעו 0 מתוך 0 גנים</div>
+      </div>
+
+      <!-- בחירת שבוע -->
+      <section id="step-week">
+        <div class="section-title">בחירת שבוע</div>
+        <div class="pill-row">
+          <button type="button" class="pill" data-week="week1">שבוע 1</button>
+          <button type="button" class="pill" data-week="week2">שבוע 2</button>
+        </div>
+      </section>
+
+      <!-- בחירת יום -->
+      <section id="step-day" class="hidden">
+        <div class="section-title">בחירת יום</div>
+        <div class="pill-row">
+          <button type="button" class="pill" data-day="א">א</button>
+          <button type="button" class="pill" data-day="ב">ב</button>
+          <button type="button" class="pill" data-day="ג">ג</button>
+          <button type="button" class="pill" data-day="ד">ד</button>
+          <button type="button" class="pill" data-day="ה">ה</button>
+          <button type="button" class="pill" data-day="ו">ו</button>
+          <button type="button" class="pill" data-day="שישי">צ'ק ליסט שישי</button>
+        </div>
+      </section>
+
+      <!-- בחירת גן -->
+      <section id="step-garden" class="hidden">
+        <div class="header-row">
+          <div class="section-title">בחירת גן</div>
+          <button type="button" class="btn-small btn-outline" id="btn-back-to-days">חזרה ליום</button>
+        </div>
+
+        <div class="field search-input">
+          <input type="search" id="garden-search" placeholder="חיפוש לפי שם גן">
+        </div>
+
+        <div id="garden-list" class="garden-list"></div>
+        <div id="garden-list-empty" class="small-text hidden">לא נמצאו גנים ליום זה. בדקו את נתוני ה־JSON.</div>
+      </section>
+
+      <!-- טופס דוח לגן -->
+      <section id="step-report" class="hidden">
+        <div class="header-row">
+          <div>
+            <div class="section-title">טופס דוח לגן</div>
+            <div class="breadcrumbs" id="breadcrumbs-text"></div>
+          </div>
+          <button type="button" class="btn-small btn-outline" id="btn-back-to-gardens">חזרה לרשימת הגנים</button>
+        </div>
+
+        <hr class="hr-soft">
+
+        <!-- תאריך בדיקה -->
+        <div class="field">
+          <div class="label">תאריך בדיקה</div>
+          <input type="date" id="field-date">
+          <div class="small-text mt-4">
+            תצוגה: <span id="date-display">—</span>
+          </div>
+        </div>
+
+        <!-- הערות -->
+        <div class="field">
+          <div class="label">הערות</div>
+          <textarea id="field-notes" placeholder="רשמו הערות כלליות על מצב הגן, ליקויים, תיאום מול צוות ועוד."></textarea>
+        </div>
+
+        <!-- משימות לביצוע -->
+        <div class="field">
+          <div class="label">משימות לביצוע</div>
+          <div class="toggle-row">
+            <span class="soft-label">סימון האם נדרשות משימות המשך</span>
+            <div id="tasks-toggle" class="toggle-switch">
+              <div class="toggle-knob"></div>
+            </div>
+          </div>
+          <div id="tasks-details-container" class="field hidden mt-4">
+            <div class="label">פירוט משימות</div>
+            <textarea id="field-task-details" placeholder="פירוט מלא של המשימות לביצוע, אחריות וזמנים."></textarea>
+          </div>
+        </div>
+
+        <!-- תמונות -->
+        <div class="field">
+          <div class="label">תמונות (עד 3)</div>
+          <div class="small-text">ניתן לצלם מהמצלמה או לבחור מהגלריה. התמונות נדחסות אוטומטית לפני שמירה.</div>
+
+          <div class="image-grid">
+            <div class="image-slot" data-slot="0">
+              <div class="image-preview-wrapper">
+                <div class="image-empty">תמונה 1</div>
+                <img alt="" class="hidden">
+              </div>
+              <div class="image-actions">
+                <button type="button" class="btn-small btn-secondary btn-image-replace" data-slot="0">החלף / הוסף</button>
+                <button type="button" class="btn-small btn-outline btn-image-remove" data-slot="0">הסר</button>
+              </div>
+            </div>
+            <div class="image-slot" data-slot="1">
+              <div class="image-preview-wrapper">
+                <div class="image-empty">תמונה 2</div>
+                <img alt="" class="hidden">
+              </div>
+              <div class="image-actions">
+                <button type="button" class="btn-small btn-secondary btn-image-replace" data-slot="1">החלף / הוסף</button>
+                <button type="button" class="btn-small btn-outline btn-image-remove" data-slot="1">הסר</button>
+              </div>
+            </div>
+            <div class="image-slot" data-slot="2">
+              <div class="image-preview-wrapper">
+                <div class="image-empty">תמונה 3</div>
+                <img alt="" class="hidden">
+              </div>
+              <div class="image-actions">
+                <button type="button" class="btn-small btn-secondary btn-image-replace" data-slot="2">החלף / הוסף</button>
+                <button type="button" class="btn-small btn-outline btn-image-remove" data-slot="2">הסר</button>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" id="btn-add-image" class="btn-small btn-outline mt-6">הוסף תמונה למקום פנוי</button>
+          <div id="image-error" class="error-text hidden"></div>
+          <input type="file" id="image-input" accept="image/*" capture="environment" class="hidden">
+        </div>
+
+        <hr class="hr-soft">
+
+        <!-- כפתורי דוח לגן -->
+        <div class="footer-actions">
+          <div class="inline-buttons">
+            <button type="button" id="btn-mark-visited" class="btn btn-success">סומן כבוצע</button>
+            <button type="button" id="btn-clear-current" class="btn btn-secondary">נקה דוח לגן זה</button>
+            <button type="button" id="btn-download-report-html" class="btn btn-outline">הורד דוח</button>
+          </div>
+          <button type="button" id="btn-clear-day" class="btn btn-outline btn-danger">נקה את כל הדוחות של היום הנבחר</button>
+          <div class="small-text">
+            כל שינוי נשמר אוטומטית (localStorage) כל כ־400ms. ניתן לסגור ולפתוח מחדש את הדפדפן ללא אובדן נתונים.
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const STORAGE_KEY = 'gardenChecksAppState_v1';
+
+      const defaultAppState = {
+        selectedWeek: null,
+        selectedDay: null,
+        selectedGarden: null,
+        reports: {}
+      };
+
+      let appState = loadState();
+      let gardensData = loadGardensData();
+      let saveTimeout = null;
+      let imageReplaceIndex = null;
+
+      const statusChipWeek = document.getElementById('status-chip-week');
+      const statusChipDay = document.getElementById('status-chip-day');
+      const statusChipGarden = document.getElementById('status-chip-garden');
+      const progressBarEl = document.getElementById('progress-bar');
+      const progressTextEl = document.getElementById('progress-text');
+
+      const stepWeek = document.getElementById('step-week');
+      const stepDay = document.getElementById('step-day');
+      const stepGarden = document.getElementById('step-garden');
+      const stepReport = document.getElementById('step-report');
+      const gardenListEl = document.getElementById('garden-list');
+      const gardenListEmptyEl = document.getElementById('garden-list-empty');
+      const gardenSearchInput = document.getElementById('garden-search');
+
+      const breadcrumbsText = document.getElementById('breadcrumbs-text');
+      const dateInput = document.getElementById('field-date');
+      const dateDisplay = document.getElementById('date-display');
+      const notesInput = document.getElementById('field-notes');
+      const tasksToggle = document.getElementById('tasks-toggle');
+      const tasksDetailsContainer = document.getElementById('tasks-details-container');
+      const taskDetailsInput = document.getElementById('field-task-details');
+      const imageInput = document.getElementById('image-input');
+      const imageError = document.getElementById('image-error');
+
+      const btnBackToDays = document.getElementById('btn-back-to-days');
+      const btnBackToGardens = document.getElementById('btn-back-to-gardens');
+      const btnAddImage = document.getElementById('btn-add-image');
+      const btnMarkVisited = document.getElementById('btn-mark-visited');
+      const btnClearCurrent = document.getElementById('btn-clear-current');
+      const btnClearDay = document.getElementById('btn-clear-day');
+      const btnDownloadReportHtml = document.getElementById('btn-download-report-html');
+
+      function loadGardensData() {
+        const scriptEl = document.getElementById('gardens-data');
+        if (!scriptEl) {
+          return { week1: {}, week2: {} };
+        }
+        try {
+          const text = scriptEl.textContent.trim();
+          if (!text) {
+            return { week1: {}, week2: {} };
+          }
+          const data = JSON.parse(text);
+          if (!data.week1) data.week1 = {};
+          if (!data.week2) data.week2 = {};
+          return data;
+        } catch (e) {
+          console.error('שגיאה בקריאת JSON של הגנים:', e);
+          alert('שגיאה בקריאת נתוני רשימת הגנים (JSON). בדקו שהפורמט תקין.');
+          return { week1: {}, week2: {} };
+        }
+      }
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return structuredClone(defaultAppState);
+          const parsed = JSON.parse(raw);
+          return Object.assign(structuredClone(defaultAppState), parsed);
+        } catch (e) {
+          console.error('שגיאה בקריאת localStorage:', e);
+          return structuredClone(defaultAppState);
+        }
+      }
+
+      function scheduleSave() {
+        if (saveTimeout) {
+          clearTimeout(saveTimeout);
+        }
+        saveTimeout = setTimeout(saveNow, 400);
+      }
+
+      function saveNow() {
+        saveTimeout = null;
+        try {
+          if (appState.selectedWeek && appState.selectedDay && appState.selectedGarden) {
+            const report = ensureReportEntry(appState.selectedWeek, appState.selectedDay, appState.selectedGarden);
+            report.updatedAt = new Date().toISOString();
+          }
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+        } catch (e) {
+          console.error('שגיאה בשמירה ל-localStorage:', e);
+        }
+        updateProgress();
+      }
+
+      function ensureReportEntry(weekKey, dayKey, gardenName) {
+        if (!appState.reports[weekKey]) appState.reports[weekKey] = {};
+        if (!appState.reports[weekKey][dayKey]) appState.reports[weekKey][dayKey] = {};
+        if (!appState.reports[weekKey][dayKey][gardenName]) {
+          appState.reports[weekKey][dayKey][gardenName] = {
+            visited: false,
+            date: null,
+            notes: '',
+            tasksForExecution: false,
+            taskDetails: '',
+            images: [null, null, null],
+            updatedAt: null
+          };
+        }
+        return appState.reports[weekKey][dayKey][gardenName];
+      }
+
+      function getReport(weekKey, dayKey, gardenName) {
+        if (!weekKey || !dayKey || !gardenName) return null;
+        return appState.reports?.[weekKey]?.[dayKey]?.[gardenName] || null;
+      }
+
+      function hebrewWeekLabel(weekKey) {
+        if (weekKey === 'week1') return 'שבוע 1';
+        if (weekKey === 'week2') return 'שבוע 2';
+        return 'לא נבחר';
+      }
+
+      function formatDateDisplay(isoDate) {
+        if (!isoDate) return '—';
+        try {
+          const dt = new Date(isoDate);
+          if (Number.isNaN(dt.getTime())) return '—';
+          return new Intl.DateTimeFormat('he-IL', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          }).format(dt);
+        } catch (e) {
+          return '—';
+        }
+      }
+
+      function todayIsoDate() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        return year + '-' + month + '-' + day;
+      }
+
+      function updateStatusChips() {
+        const weekLabel = hebrewWeekLabel(appState.selectedWeek);
+        statusChipWeek.textContent = 'שבוע: ' + weekLabel;
+        statusChipWeek.classList.toggle('chip-muted', !appState.selectedWeek);
+
+        const dayLabel = appState.selectedDay || 'לא נבחר';
+        statusChipDay.textContent = 'יום: ' + dayLabel;
+        statusChipDay.classList.toggle('chip-muted', !appState.selectedDay);
+
+        const gardenLabel = appState.selectedGarden || 'לא נבחר';
+        statusChipGarden.textContent = 'גן: ' + gardenLabel;
+        statusChipGarden.classList.toggle('chip-muted', !appState.selectedGarden);
+      }
+
+      function updateProgress() {
+        const weekKey = appState.selectedWeek;
+        const dayKey = appState.selectedDay;
+        if (!weekKey || !dayKey) {
+          progressBarEl.style.width = '0%';
+          progressTextEl.textContent = 'בוצעו 0 מתוך 0 גנים';
+          return;
+        }
+
+        const gardensForDay = gardensData[weekKey]?.[dayKey] || [];
+        const total = gardensForDay.length;
+        let done = 0;
+        if (total > 0) {
+          for (const name of gardensForDay) {
+            const report = getReport(weekKey, dayKey, name);
+            if (report && report.visited) done += 1;
+          }
+        }
+        const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+        progressBarEl.style.width = percent + '%';
+        progressTextEl.textContent = 'בוצעו ' + done + ' מתוך ' + total + ' גנים';
+      }
+
+      function renderWeekSelection() {
+        const buttons = stepWeek.querySelectorAll('.pill');
+        buttons.forEach(btn => {
+          const weekKey = btn.getAttribute('data-week');
+          btn.classList.toggle('active', appState.selectedWeek === weekKey);
+        });
+      }
+
+      function renderDaySelection() {
+        const buttons = stepDay.querySelectorAll('.pill');
+        buttons.forEach(btn => {
+          const dayKey = btn.getAttribute('data-day');
+          btn.classList.toggle('active', appState.selectedDay === dayKey);
+        });
+      }
+
+      function renderGardenList() {
+        gardenListEl.innerHTML = '';
+        const weekKey = appState.selectedWeek;
+        const dayKey = appState.selectedDay;
+        const searchTerm = gardenSearchInput.value.trim().toLowerCase();
+
+        if (!weekKey || !dayKey) {
+          gardenListEmptyEl.classList.remove('hidden');
+          gardenListEmptyEl.textContent = 'בחרו שבוע ויום כדי להציג גנים.';
+          return;
+        }
+
+        const gardens = gardensData[weekKey]?.[dayKey] || [];
+        const filtered = gardens.filter(name => {
+          if (!searchTerm) return true;
+          return String(name).toLowerCase().includes(searchTerm);
+        });
+
+        if (filtered.length === 0) {
+          gardenListEmptyEl.classList.remove('hidden');
+          gardenListEmptyEl.textContent = 'לא נמצאו גנים תואמים לחיפוש / ליום זה.';
+          return;
+        }
+
+        gardenListEmptyEl.classList.add('hidden');
+
+        for (const name of filtered) {
+          const item = document.createElement('button');
+          item.type = 'button';
+          item.className = 'garden-item';
+          if (appState.selectedGarden === name) {
+            item.style.borderColor = 'var(--primary)';
+          }
+          const report = getReport(weekKey, dayKey, name);
+          if (report && report.visited) {
+            item.classList.add('visited');
+          }
+
+          const span = document.createElement('span');
+          span.textContent = name;
+
+          const statusDot = document.createElement('div');
+          statusDot.className = 'status-dot';
+
+          item.appendChild(span);
+          item.appendChild(statusDot);
+          item.addEventListener('click', function () {
+            appState.selectedGarden = name;
+            scheduleSave();
+            updateStatusChips();
+            renderGardenList();
+            showReportStep();
+          });
+
+          gardenListEl.appendChild(item);
+        }
+      }
+
+      function showReportStep() {
+        stepReport.classList.remove('hidden');
+        stepGarden.classList.add('hidden');
+        const weekKey = appState.selectedWeek;
+        const dayKey = appState.selectedDay;
+        const gardenName = appState.selectedGarden;
+        if (!weekKey || !dayKey || !gardenName) return;
+
+        const labelWeek = hebrewWeekLabel(weekKey);
+        breadcrumbsText.textContent = labelWeek + ' · יום ' + dayKey + ' · גן ' + gardenName;
+
+        const report = ensureReportEntry(weekKey, dayKey, gardenName);
+
+        let dateVal = report.date;
+        if (!dateVal) {
+          dateVal = todayIsoDate();
+          report.date = dateVal;
+          scheduleSave();
+        }
+        dateInput.value = dateVal;
+        dateDisplay.textContent = formatDateDisplay(dateVal);
+
+        notesInput.value = report.notes || '';
+
+        setTasksToggle(report.tasksForExecution);
+        taskDetailsInput.value = report.taskDetails || '';
+        tasksDetailsContainer.classList.toggle('hidden', !report.tasksForExecution);
+
+        const images = report.images || [null, null, null];
+        const slots = document.querySelectorAll('.image-slot');
+        slots.forEach(slot => {
+          const idx = Number(slot.getAttribute('data-slot'));
+          const imgEl = slot.querySelector('img');
+          const emptyEl = slot.querySelector('.image-empty');
+          const data = images[idx];
+          if (data) {
+            imgEl.src = data;
+            imgEl.classList.remove('hidden');
+            emptyEl.classList.add('hidden');
+          } else {
+            imgEl.src = '';
+            imgEl.classList.add('hidden');
+            emptyEl.classList.remove('hidden');
+          }
+        });
+
+        imageError.classList.add('hidden');
+        imageError.textContent = '';
+      }
+
+      function setTasksToggle(on) {
+        tasksToggle.classList.toggle('toggle-on', !!on);
+      }
+
+      function getToggleValue() {
+        return tasksToggle.classList.contains('toggle-on');
+      }
+
+      function initListeners() {
+        stepWeek.addEventListener('click', function (e) {
+          const btn = e.target.closest('.pill[data-week]');
+          if (!btn) return;
+          const weekKey = btn.getAttribute('data-week');
+          appState.selectedWeek = weekKey;
+          if (!appState.selectedDay) {
+            appState.selectedDay = null;
+            appState.selectedGarden = null;
+          }
+          scheduleSave();
+          updateStatusChips();
+          renderWeekSelection();
+          stepDay.classList.remove('hidden');
+          stepGarden.classList.add('hidden');
+          stepReport.classList.add('hidden');
+          updateProgress();
+        });
+
+        stepDay.addEventListener('click', function (e) {
+          const btn = e.target.closest('.pill[data-day]');
+          if (!btn) return;
+          const dayKey = btn.getAttribute('data-day');
+          appState.selectedDay = dayKey;
+          appState.selectedGarden = null;
+          scheduleSave();
+          updateStatusChips();
+          renderDaySelection();
+          stepGarden.classList.remove('hidden');
+          stepReport.classList.add('hidden');
+          renderGardenList();
+          updateProgress();
+        });
+
+        gardenSearchInput.addEventListener('input', function () {
+          renderGardenList();
+        });
+
+        btnBackToDays.addEventListener('click', function () {
+          stepGarden.classList.add('hidden');
+          stepReport.classList.add('hidden');
+          stepDay.classList.remove('hidden');
+        });
+
+        btnBackToGardens.addEventListener('click', function () {
+          stepReport.classList.add('hidden');
+          stepGarden.classList.remove('hidden');
+          renderGardenList();
+        });
+
+        dateInput.addEventListener('change', function () {
+          const weekKey = appState.selectedWeek;
+          const dayKey = appState.selectedDay;
+          const gardenName = appState.selectedGarden;
+          const report = ensureReportEntry(weekKey, dayKey, gardenName);
+          report.date = dateInput.value || null;
+          dateDisplay.textContent = formatDateDisplay(report.date);
+          scheduleSave();
+        });
+
+        notesInput.addEventListener('input', function () {
+          const weekKey = appState.selectedWeek;
+          const dayKey = appState.selectedDay;
+          const gardenName = appState.selectedGarden;
+          const report = ensureReportEntry(weekKey, dayKey, gardenName);
+          report.notes = notesInput.value || '';
+          scheduleSave();
+        });
+
+        tasksToggle.addEventListener('click', function () {
+          const newVal = !getToggleValue();
+          setTasksToggle(newVal);
+          const weekKey = appState.selectedWeek;
+          const dayKey = appState.selectedDay;
+          const gardenName = appState.selectedGarden;
+          const report = ensureReportEntry(weekKey, dayKey, gardenName);
+          report.tasksForExecution = newVal;
+          if (!newVal) {
+            report.taskDetails = '';
+            taskDetailsInput.value = '';
+          }
+          tasksDetailsContainer.classList.toggle('hidden', !newVal);
+          scheduleSave();
+        });
+
+        taskDetailsInput.addEventListener('input', function () {
+          const weekKey = appState.selectedWeek;
+          const dayKey = appState.selectedDay;
+          const gardenName = appState.selectedGarden;
+          const report = ensureReportEntry(weekKey, dayKey, gardenName);
+          report.taskDetails = taskDetailsInput.value || '';
+          scheduleSave();
+        });
+
+        btnAddImage.addEventListener('click', function () {
+          imageReplaceIndex = null;
+          const weekKey = appState.selectedWeek;
+          const dayKey = appState.selectedDay;
+          const gardenName = appState.selectedGarden;
+          const report = ensureReportEntry(weekKey, dayKey, gardenName);
+          const images = report.images || [null, null, null];
+          const emptyIndex = images.findIndex(v => !v);
+          if (emptyIndex === -1) {
+            showImageError('אין מקום לתמונות נוספות. מחקו תמונה קיימת או השתמשו בהחלפה.');
+            return;
+          }
+          imageInput.click();
+        });
+
+        const replaceButtons = document.querySelectorAll('.btn-image-replace');
+        replaceButtons.forEach(btn => {
+          btn.addEventListener('click', function () {
+            const slotIdx = Number(btn.getAttribute('data-slot'));
+            imageReplaceIndex = slotIdx;
+            hideImageError();
+            imageInput.click();
+          });
+        });
+
+        const removeButtons = document.querySelectorAll('.btn-image-remove');
+        removeButtons.forEach(btn => {
+          btn.addEventListener('click', function () {
+            const slotIdx = Number(btn.getAttribute('data-slot'));
+            removeImageAt(slotIdx);
+          });
+        });
+
+        imageInput.addEventListener('change', function () {
+          const file = imageInput.files && imageInput.files[0];
+          imageInput.value = '';
+          if (!file) return;
+
+          const reader = new FileReader();
+          reader.onload = function (ev) {
+            const img = new Image();
+            img.onload = function () {
+              const canvas = document.createElement('canvas');
+              const maxWidth = 1280;
+              let width = img.width;
+              let height = img.height;
+              if (width > maxWidth) {
+                const ratio = maxWidth / width;
+                width = maxWidth;
+                height = Math.round(height * ratio);
+              }
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+              const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+
+              const weekKey = appState.selectedWeek;
+              const dayKey = appState.selectedDay;
+              const gardenName = appState.selectedGarden;
+              const report = ensureReportEntry(weekKey, dayKey, gardenName);
+              if (!Array.isArray(report.images)) {
+                report.images = [null, null, null];
+              }
+
+              if (imageReplaceIndex !== null && imageReplaceIndex >= 0 && imageReplaceIndex <= 2) {
+                report.images[imageReplaceIndex] = dataUrl;
+              } else {
+                const emptyIndex = report.images.findIndex(v => !v);
+                if (emptyIndex === -1) {
+                  showImageError('אין מקום לתמונות נוספות. מחקו תמונה קיימת לפני הוספה.');
+                  return;
+                } else {
+                  report.images[emptyIndex] = dataUrl;
+                }
+              }
+
+              scheduleSave();
+              showReportStep();
+              hideImageError();
+            };
+            img.onerror = function () {
+              showImageError('לא ניתן לטעון את התמונה. נסו שוב.');
+            };
+            img.src = ev.target.result;
+          };
+          reader.onerror = function () {
+            showImageError('שגיאה בקריאת הקובץ. נסו שוב.');
+          };
+          reader.readAsDataURL(file);
+        });
+
+        btnMarkVisited.addEventListener('click', function () {
+          const weekKey = appState.selectedWeek;
+          const dayKey = appState.selectedDay;
+          const gardenName = appState.selectedGarden;
+          const report = ensureReportEntry(weekKey, dayKey, gardenName);
+          if (!report.date) {
+            report.date = todayIsoDate();
+            dateInput.value = report.date;
+            dateDisplay.textContent = formatDateDisplay(report.date);
+          }
+          report.visited = true;
+          scheduleSave();
+          updateProgress();
+          renderGardenList();
+        });
+
+        btnClearCurrent.addEventListener('click', function () {
+          if (!appState.selectedWeek || !appState.selectedDay || !appState.selectedGarden) return;
+          const confirmClear = confirm('למחוק את כל נתוני הדוח עבור גן זה?');
+          if (!confirmClear) return;
+          const weekKey = appState.selectedWeek;
+          const dayKey = appState.selectedDay;
+          const gardenName = appState.selectedGarden;
+          if (appState.reports?.[weekKey]?.[dayKey]?.[gardenName]) {
+            delete appState.reports[weekKey][dayKey][gardenName];
+          }
+          scheduleSave();
+          showReportStep();
+          updateProgress();
+          renderGardenList();
+        });
+
+        btnClearDay.addEventListener('click', function () {
+          const weekKey = appState.selectedWeek;
+          const dayKey = appState.selectedDay;
+          if (!weekKey || !dayKey) return;
+          const confirmClear = confirm('למחוק את כל הדוחות עבור היום הנבחר? פעולה זו אינה ניתנת לביטול.');
+          if (!confirmClear) return;
+          if (appState.reports?.[weekKey]?.[dayKey]) {
+            appState.reports[weekKey][dayKey] = {};
+          }
+          scheduleSave();
+          showReportStep();
+          updateProgress();
+          renderGardenList();
+        });
+
+        btnDownloadReportHtml.addEventListener('click', function () {
+          downloadReportAsHtml();
+        });
+      }
+
+      function showImageError(msg) {
+        imageError.textContent = msg;
+        imageError.classList.remove('hidden');
+      }
+
+      function hideImageError() {
+        imageError.textContent = '';
+        imageError.classList.add('hidden');
+      }
+
+      function removeImageAt(index) {
+        const weekKey = appState.selectedWeek;
+        const dayKey = appState.selectedDay;
+        const gardenName = appState.selectedGarden;
+        const report = ensureReportEntry(weekKey, dayKey, gardenName);
+        if (!Array.isArray(report.images)) {
+          report.images = [null, null, null];
+        }
+        report.images[index] = null;
+        scheduleSave();
+        showReportStep();
+      }
+
+      function downloadReportAsHtml() {
+        const weekKey = appState.selectedWeek;
+        const dayKey = appState.selectedDay;
+        const gardenName = appState.selectedGarden;
+        if (!weekKey || !dayKey || !gardenName) {
+          alert('יש לבחור גן (שבוע, יום וגן) לפני הורדת הדוח.');
+          return;
+        }
+        const report = ensureReportEntry(weekKey, dayKey, gardenName);
+        const weekLabel = hebrewWeekLabel(weekKey);
+        const dateVal = dateInput.value || report.date || todayIsoDate();
+        const dateDisplayStr = formatDateDisplay(dateVal);
+        const notes = notesInput.value.trim() || (report.notes || '').trim();
+        const hasTasks = getToggleValue();
+        const taskDetails = taskDetailsInput.value.trim() || (report.taskDetails || '').trim();
+        const images = Array.isArray(report.images) ? report.images : [null, null, null];
+
+        var imagesHtml = '';
+        for (var i = 0; i < images.length; i++) {
+          if (images[i]) {
+            var safeSrc = String(images[i]).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            imagesHtml += '<div class="report-image"><img src="' + safeSrc + '" alt="תמונה ' + (i + 1) + '"></div>';
+          } else {
+            imagesHtml += '<div class="report-image report-image-empty">תמונה ' + (i + 1) + ' – לא הועלתה</div>';
+          }
+        }
+
+        var safeName = (gardenName + '_' + dateVal).replace(/[^a-zA-Z0-9_\-\u0590-\u05FF]/g, '_');
+        var html = '<!DOCTYPE html>\n<html lang="he" dir="rtl">\n<head>\n  <meta charset="UTF-8">\n  <title>דוח בדיקה - ' + escapeHtml(gardenName) + '</title>\n  <style>\n    /* עיצוב הדוח – ניתן לערוך לפי הצורך */\n    body { font-family: Arial, sans-serif; margin: 24px; direction: rtl; text-align: right; }\n    .report-title { font-size: 1.5em; margin-bottom: 1em; border-bottom: 1px solid #ccc; padding-bottom: 8px; }\n    .report-row { margin: 10px 0; }\n    .report-label { font-weight: bold; }\n    .report-images { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }\n    .report-image { width: 200px; min-height: 120px; border: 1px solid #ddd; padding: 8px; }\n    .report-image img { max-width: 100%; height: auto; display: block; }\n    .report-image-empty { color: #999; display: flex; align-items: center; justify-content: center; }\n  </style>\n</head>\n<body>\n  <!-- ניתן לערוך עיצוב וטקסט בקובץ. לפתיחה ב-Word: פתח את הקובץ ב-Word ושמור כ-.docx. ל-PDF: פתח בדפדפן והדפס (Ctrl+P) → שמירה כ-PDF. -->\n  <h1 class="report-title">דוח בדיקות גנים</h1>\n  <div class="report-row"><span class="report-label">שבוע:</span> ' + escapeHtml(weekLabel) + '</div>\n  <div class="report-row"><span class="report-label">יום:</span> ' + escapeHtml(dayKey) + '</div>\n  <div class="report-row"><span class="report-label">גן:</span> ' + escapeHtml(gardenName) + '</div>\n  <div class="report-row"><span class="report-label">תאריך בדיקה:</span> ' + escapeHtml(dateDisplayStr) + '</div>\n  <div class="report-row"><span class="report-label">הערות:</span><br>' + escapeHtml(notes || '—') + '</div>\n  <div class="report-row"><span class="report-label">משימות לביצוע:</span> ' + (hasTasks ? 'כן' : 'לא') + '</div>\n' + (hasTasks ? '<div class="report-row"><span class="report-label">פירוט משימות:</span><br>' + escapeHtml(taskDetails || '—') + '</div>\n' : '') + '  <div class="report-row"><span class="report-label">תמונות:</span></div>\n  <div class="report-images">' + imagesHtml + '</div>\n</body>\n</html>';
+
+        var blob = new Blob(['\uFEFF' + html], { type: 'text/html;charset=utf-8' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'report_' + safeName + '.html';
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }
+
+      function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function restoreInitialUI() {
+        renderWeekSelection();
+        renderDaySelection();
+        updateStatusChips();
+        updateProgress();
+
+        if (appState.selectedWeek) {
+          stepDay.classList.remove('hidden');
+        } else {
+          stepDay.classList.add('hidden');
+        }
+
+        if (appState.selectedWeek && appState.selectedDay) {
+          stepGarden.classList.remove('hidden');
+          renderGardenList();
+        } else {
+          stepGarden.classList.add('hidden');
+        }
+
+        if (appState.selectedWeek && appState.selectedDay && appState.selectedGarden) {
+          stepReport.classList.remove('hidden');
+          stepGarden.classList.add('hidden');
+          showReportStep();
+        } else {
+          stepReport.classList.add('hidden');
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', function () {
+        initListeners();
+        restoreInitialUI();
+      });
+    })();
+  </script>
+</body>
+</html>
