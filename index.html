@@ -228,6 +228,36 @@
       color: #ffffff;
     }
 
+    .btn-sync-cloud {
+      background-color: #2e7d32;
+      color: #fff;
+      border: none;
+    }
+    .btn-sync-cloud:active {
+      background-color: #1b5e20;
+    }
+
+    .btn-sync-day {
+      background-color: #0F2B46;
+      color: #fff;
+      border: none;
+    }
+    .btn-sync-day:active {
+      background-color: #0a1d2e;
+    }
+
+    .badge-synced {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background-color: #e8f5e9;
+      color: #2e7d32;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-right: 6px;
+    }
+
     .btn-icon {
       width: var(--tap-height);
       padding: 0;
@@ -545,10 +575,10 @@
     }
 
     .footer-actions {
-      margin-top: 6px;
+      margin-top: 10px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 10px;
     }
 
     .inline-buttons {
@@ -850,7 +880,7 @@
       <section id="step-report" class="hidden">
         <div class="header-row">
           <div>
-            <div class="section-title">טופס דוח לגן</div>
+            <div class="section-title">טופס דוח לגן <span id="report-synced-badge" class="badge-synced hidden">סונכרן</span></div>
             <div class="breadcrumbs" id="breadcrumbs-text"></div>
           </div>
           <button type="button" class="btn-small btn-back-yellow" id="btn-back-to-gardens">חזרה לרשימת הגנים</button>
@@ -941,8 +971,8 @@
             <button type="button" id="btn-download-report-html" class="btn btn-outline">הורד דוח</button>
           </div>
           <button type="button" id="btn-clear-day" class="btn btn-outline btn-danger">נקה את כל הדוחות של היום הנבחר</button>
-          <button type="button" id="btn-sync-current" class="btn btn-outline">סנכרון לענן</button>
-          <button type="button" id="btn-sync-day" class="btn btn-secondary">סנכרון יום</button>
+          <button type="button" id="btn-sync-current" class="btn btn-sync-cloud">סנכרון לענן</button>
+          <button type="button" id="btn-sync-day" class="btn btn-sync-day">סנכרון יום</button>
           <div class="small-text">
            
           </div>
@@ -953,13 +983,17 @@
 
   <div id="toast" class="toast hidden" aria-live="polite"></div>
 
-  <script>
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    // --- Supabase (cloud sync) – החלף בערכים מהפרויקט שלך ב-Supabase ---
+    const SUPABASE_URL = 'https://zrurkifzrfdyrpkwgoyz.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpydXJraWZ6cmZkeXJwa3dnb3l6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0MzU0NTcsImV4cCI6MjA4NzAxMTQ1N30.TqFJBz4CCPrMOZsisH8188Mx85ZDSCfQJNetcsc-Vxs';
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
     (function () {
       'use strict';
-
-      // --- Supabase (cloud sync) – החלף בערכים מהפרויקט שלך ב-Supabase ---
-      const SUPABASE_URL = 'https://zrurkifzrfdyrpkwgoyz.supabase.co';
-      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpydXJraWZ6cmZkeXJwa3dnb3l6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0MzU0NTcsImV4cCI6MjA4NzAxMTQ1N30.TqFJBz4CCPrMOZsisH8188Mx85ZDSCfQJNetcsc-Vxs';
 
       const STORAGE_KEY = 'gardenChecksAppState_v1';
 
@@ -990,6 +1024,7 @@
       const gardenSearchInput = document.getElementById('garden-search');
 
       const breadcrumbsText = document.getElementById('breadcrumbs-text');
+      const reportSyncedBadge = document.getElementById('report-synced-badge');
       const dateInput = document.getElementById('field-date');
       const dateDisplay = document.getElementById('date-display');
       const notesInput = document.getElementById('field-notes');
@@ -1054,26 +1089,19 @@
       }
 
       function uploadToStorage(blob, path) {
-        return fetch(SUPABASE_URL + '/storage/v1/object/inspection-images/' + path, {
-          method: 'POST',
-          headers: {
-            'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
-            'Content-Type': 'image/jpeg'
-          },
-          body: blob
+        return supabase.storage.from('inspection-images').upload(path, blob, {
+          contentType: 'image/jpeg',
+          upsert: true
+        }).then(function (result) {
+          if (result.error) throw new Error(result.error.message);
+          return supabase.storage.from('inspection-images').getPublicUrl(path).data.publicUrl;
         });
       }
 
       function insertInspection(row) {
-        return fetch(SUPABASE_URL + '/rest/v1/inspections', {
-          method: 'POST',
-          headers: {
-            'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
-            'apikey': SUPABASE_ANON_KEY,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=representation'
-          },
-          body: JSON.stringify(row)
+        return supabase.from('inspections').insert(row).select('id').single().then(function (result) {
+          if (result.error) throw new Error(result.error.message);
+          return result.data;
         });
       }
 
@@ -1087,10 +1115,8 @@
           if (!dataUrl) return Promise.resolve(null);
           return compressImageToBlob(dataUrl).then(function (blob) {
             var fileName = ts + '_' + (i + 1) + '.jpg';
-            return uploadToStorage(blob, basePath + '/' + fileName).then(function (res) {
-              if (!res.ok) throw new Error('Upload failed');
-              return SUPABASE_URL + '/storage/v1/object/public/inspection-images/' + basePath + '/' + fileName;
-            });
+            var fullPath = basePath + '/' + fileName;
+            return uploadToStorage(blob, fullPath);
           });
         })).then(function (urls) {
           var imageUrls = urls.filter(Boolean);
@@ -1104,12 +1130,9 @@
             task_details: (taskDetails || '').trim() || null,
             images: imageUrls
           };
-          return insertInspection(row).then(function (res) {
-            if (!res.ok) throw new Error('Insert failed');
-            return res.json();
-          });
-        }).then(function (rows) {
-          var id = rows && rows[0] && rows[0].id;
+          return insertInspection(row);
+        }).then(function (data) {
+          var id = data && data.id;
           if (id) {
             report.syncedAt = new Date().toISOString();
             report.remoteId = id;
@@ -1411,13 +1434,26 @@
             item.classList.add('visited');
           }
 
+          const wrap = document.createElement('span');
+          wrap.style.flex = '1';
+          wrap.style.display = 'flex';
+          wrap.style.alignItems = 'center';
+          wrap.style.gap = '6px';
+          wrap.style.justifyContent = 'flex-end';
           const span = document.createElement('span');
           span.textContent = name;
+          wrap.appendChild(span);
+          if (report && report.syncedAt) {
+            const syncedBadge = document.createElement('span');
+            syncedBadge.className = 'badge-synced';
+            syncedBadge.textContent = 'סונכרן';
+            wrap.appendChild(syncedBadge);
+          }
 
           const statusDot = document.createElement('div');
           statusDot.className = 'status-dot';
 
-          item.appendChild(span);
+          item.appendChild(wrap);
           item.appendChild(statusDot);
           item.addEventListener('click', function () {
             appState.selectedGarden = name;
@@ -1443,6 +1479,9 @@
         breadcrumbsText.textContent = labelWeek + ' · יום ' + dayKey + ' · גן ' + gardenName;
 
         const report = ensureReportEntry(weekKey, dayKey, gardenName);
+        if (reportSyncedBadge) {
+          reportSyncedBadge.classList.toggle('hidden', !report.syncedAt);
+        }
 
         let dateVal = report.date;
         if (!dateVal) {
@@ -1844,4 +1883,3 @@
   </script>
 </body>
 </html>
-
