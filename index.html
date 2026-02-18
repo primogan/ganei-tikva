@@ -3,13 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <title>דיווח גנים - אפליקציית שטח</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#E6E6E6">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="גני תקווה">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="logo-ganei-tikva.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="logo-ganei-tikva.png">
+  <link rel="apple-touch-startup-image" href="logo-ganei-tikva.png">
   <style>
     :root {
       color-scheme: light;
@@ -43,6 +46,12 @@
       direction: rtl;
       text-align: right;
       -webkit-tap-highlight-color: transparent;
+      /* תמיכה במסך מלא – אייפון עם נוטש */
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+      padding-bottom: env(safe-area-inset-bottom);
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
     }
 
     body {
@@ -54,7 +63,10 @@
       width: 100%;
       max-width: 480px;
       min-height: 100vh;
+      min-height: -webkit-fill-available;
       padding: 12px 10px 16px;
+      padding-top: calc(12px + env(safe-area-inset-top));
+      padding-bottom: calc(16px + env(safe-area-inset-bottom));
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -646,7 +658,7 @@
       }
     }
 
-    /* מסך פתיחה – לוגו */
+    /* מסך פתיחה – לוגו, מכסה את כל המסך כולל אזורי נוטש */
     .splash-screen {
       position: fixed;
       inset: 0;
@@ -656,6 +668,7 @@
       justify-content: center;
       background-color: #E6E6E6;
       transition: opacity 0.6s ease-out;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     }
     .splash-screen.fade-out {
       opacity: 0;
@@ -901,7 +914,7 @@
           </div>
           <button type="button" id="btn-clear-day" class="btn btn-outline btn-danger">נקה את כל הדוחות של היום הנבחר</button>
           <div class="small-text">
-            כל שינוי נשמר אוטומטית (localStorage) כל כ־400ms. ניתן לסגור ולפתוח מחדש את הדפדפן ללא אובדן נתונים.
+           
           </div>
         </div>
       </section>
